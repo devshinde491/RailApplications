@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Search Trains</h2>
+    <form id="trainSearchForm">
+        <div class="mb-3">
+            <label for="source" class="form-label">Source</label>
+            <input type="text" id="source" name="source" class="form-control" placeholder="Enter source station" required>
+        </div>
+        <div class="mb-3">
+            <label for="destination" class="form-label">Destination</label>
+            <input type="text" id="destination" name="destination" class="form-control" placeholder="Enter destination station" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <h3 class="mt-4">Available Trains</h3>
+    <ul id="trainResults" class="list-group mt-3"></ul>
+</div>
+
+<script>
+    document.getElementById('trainSearchForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        let source = document.getElementById('source').value;
+        let destination = document.getElementById('destination').value;
+
+        fetch(`/search_trains/?source=${source}&destination=${destination}`)
+            .then(response => response.json())
+            .then(data => {
+                let trainResults = document.getElementById('trainResults');
+                trainResults.innerHTML = "";
+
+                if (data.trains.length > 0) {
+                    data.trains.forEach(train => {
+                        let listItem = document.createElement('li');
+                        listItem.classList.add('list-group-item');
+                        listItem.innerHTML = `<strong>${train.name} (${train.number})</strong> - ${train.source} to ${train.destination}`;
+                        trainResults.appendChild(listItem);
+                    });
+                } else {
+                    trainResults.innerHTML = "<li class='list-group-item text-danger'>No trains found.</li>";
+                }
+            })
+            .catch(error => console.error('Error fetching trains:', error));
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Railway Management System</h1>
+    <p class="lead">Book train tickets, check PNR status, and manage your journeys with ease.</p>
+    <hr class="my-4">
+    <p>Get started by searching for trains or checking your booking status.</p>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary btn-lg" href="{% url 'search_trains' %}" role="button">Search Trains</a>
+        <a class="btn btn-secondary btn-lg" href="{% url 'pnr_status' %}" role="button">Check PNR Status</a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Book Tickets</h5>
+                <p class="card-text">Search and book train tickets for your journey.</p>
+                <a href="{% url 'search_trains' %}" class="btn btn-primary">Book Now</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Check PNR Status</h5>
+                <p class="card-text">Track your booking status with PNR number.</p>
+                <a href="{% url 'pnr_status' %}" class="btn btn-primary">Check Status</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Manage Bookings</h5>
+                <p class="card-text">View and manage your bookings in one place.</p>
+                <a href="{% url 'user_dashboard' %}" class="btn btn-primary">My Bookings</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

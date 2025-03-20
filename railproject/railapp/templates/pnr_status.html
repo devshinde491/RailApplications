@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}PNR Status{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Check PNR Status</h4>
+    </div>
+    <div class="card-body">
+        <form id="pnr-form" method="GET">
+            <div class="input-group mb-3">
+                <input type="text" name="pnr" id="pnr-input" class="form-control" placeholder="Enter PNR Number" required>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="pnr-result">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-warning">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if booking %}
+    <div class="card">
+        <div class="card-header">
+            <h5>PNR Details</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>PNR:</strong> {{ booking.pnr }}</p>
+            <p><strong>Passenger Name:</strong> {{ booking.user.username }}</p>
+            <p><strong>Train:</strong> {{ booking.train.name }} ({{ booking.train.train_number }})</p>
+            <p><strong>From:</strong> {{ booking.train.source.name }} ({{ booking.train.source.code }})</p>
+            <p><strong>To:</strong> {{ booking.train.destination.name }} ({{ booking.train.destination.code }})</p>
+            <p><strong>Departure:</strong> {{ booking.train.departure_time }}</p>
+            <p><strong>Arrival:</strong> {{ booking.train.arrival_time }}</p>
+            <p><strong>Class:</strong> {{ booking.train_class }}</p>
+            <p><strong>Seats:</strong> {{ booking.num_passengers }}</p>
+            <p><strong>Total Fare:</strong> ₹{{ booking.total_fare }}</p>
+            <p><strong>Status:</strong> <span class="badge bg-success">Confirmed</span></p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $("#pnr-form").submit(function(event) {
+        event.preventDefault();
+        let pnr = $("#pnr-input").val().trim();
+
+        if (pnr === "") {
+            alert("Please enter a valid PNR number.");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'pnr_status' %}",
+            data: { pnr: pnr },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(response) {
+                if (response.status) {
+                    $("#pnr-result").html(`
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>PNR Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Train:</strong> ${response.train}</p>
+                                <p><strong>Departure:</strong> ${response.departure}</p>
+                                <p><strong>Seats:</strong> ${response.seats}</p>
+                                <p><strong>Status:</strong> <span class="badge bg-success">${response.status}</span></p>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    $("#pnr-result").html('<div class="alert alert-danger">PNR not found.</div>');
+                }
+            },
+            error: function() {
+                $("#pnr-result").html('<div class="alert alert-danger">Error retrieving PNR status.</div>');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

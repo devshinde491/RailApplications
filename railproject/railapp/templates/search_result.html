@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Trains - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">Search Trains</h4>
+    </div>
+    <div class="card-body">
+        <form method="get">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="id_source" class="form-label">From</label>
+                    <input type="text" name="source" id="id_source" class="form-control" placeholder="Enter Source">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="id_destination" class="form-label">To</label>
+                    <input type="text" name="destination" id="id_destination" class="form-control" placeholder="Enter Destination">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="id_date" class="form-label">Date of Journey</label>
+                    <input type="date" name="date" id="id_date" class="form-control">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="id_train_type" class="form-label">Train Type</label>
+                    <select name="train_type" id="id_train_type" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="express">Express</option>
+                        <option value="local">Local</option>
+                        <option value="superfast">Superfast</option>
+                        <option value="shatabdi">Shatabdi</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Search Trains</button>
+        </form>
+    </div>
+</div>
+   {% csrf_token %}
+{% if trains %}
+    <h4>Available Trains</h4>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Train Number</th>
+                    <th>Train Name</th>
+                    <th>Type</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Duration</th>
+                    <th>Available Classes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for train in trains %}
+                <tr>
+                    <td>{{ train.train_number }}</td>
+                    <td>{{ train.name }}</td>
+                    <td><span class="badge bg-info">{{ train.get_train_type_display }}</span></td>
+                    <td>{{ train.source.name }} ({{ train.source.code }})</td>
+                    <td>{{ train.destination.name }} ({{ train.destination.code }})</td>
+                    <td>{{ train.departure_time }}</td>
+                    <td>{{ train.arrival_time }}</td>
+                    <td>{{ train.duration }}</td>
+                    <td>
+                        {% for class_avail in train.trainclassavailability_set.all %}
+                            {% if class_avail.available_seats > 0 %}
+                                <span class="badge bg-success">{{ class_avail.train_class.code }} ({{ class_avail.available_seats }} seats)</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ class_avail.train_class.code }} (Full)</span>
+                            {% endif %}
+                        {% empty %}
+                            <span class="text-muted">No classes available</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if train.trainclassavailability_set.all|length > 0 %}
+                            <a href="{% url 'book_ticket' train.id %}" class="btn btn-sm btn-primary">Book</a>
+                        {% else %}
+                            <button class="btn btn-sm btn-secondary" disabled>Full</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% elif request.method == 'GET' %}
+    <div class="alert alert-info">No trains found for the selected route and date.</div>
+{% endif %}
+{% endblock %}

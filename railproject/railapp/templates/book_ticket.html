@@ -1,0 +1,84 @@
+<!-- templates/book_ticket.html -->
+{% extends 'base.html' %}
+
+{% block title %}Book Ticket - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Book Ticket for {{ train.name }} ({{ train.train_number }})</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Class:</strong> {{ train_class_availability.train_class.name }}</p>
+            <p><strong>Price per seat:</strong> ₹<span id="price-per-seat">{{ train_class_availability.train_class.price }}</span></p>
+            <p>
+                <strong>Available Seats:</strong>
+                {% if train_class_availability.available_seats > 0 %}
+                    {{ train_class_availability.available_seats }}
+                {% else %}
+                    No seats available
+                {% endif %}
+            </p>
+            <p><strong>Journey Date:</strong> {{ train_class_availability.date }}</p>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" id="booking-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_num_passengers" class="form-label">Number of Passengers</label>
+                    <!-- Ensure the ID is explicitly set -->
+                    <input type="number" name="num_passengers" id="id_num_passengers" class="form-control" value="{{ form.num_passengers.value|default:'1' }}" min="1" max="{{ train_class_availability.available_seats }}" required>
+                    {% if form.num_passengers.errors %}
+                        <div class="text-danger">
+                            {{ form.num_passengers.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Total Price: ₹<span id="total-price">0</span></label>
+                </div>
+                <!-- Hidden field for train_class (pre-selected) -->
+                {{ form.train_class }}
+                <button type="submit" class="btn btn-primary">Confirm Booking</button>
+            </form>
+            <a href="{% url 'search_trains' %}" class="btn btn-secondary mt-3">Back to Search</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const numPassengersInput = document.getElementById('id_num_passengers');
+    const pricePerSeatElement = document.getElementById('price-per-seat');
+    const totalPriceSpan = document.getElementById('total-price');
+
+    // Check if elements exist to avoid errors
+    if (!numPassengersInput || !pricePerSeatElement || !totalPriceSpan) {
+        console.error("One or more elements not found: numPassengersInput, pricePerSeatElement, or totalPriceSpan");
+        return;
+    }
+
+    const pricePerSeat = parseFloat(pricePerSeatElement.textContent) || 0;
+
+    function updateTotalPrice() {
+        const numPassengers = parseInt(numPassengersInput.value) || 0;
+        const totalPrice = numPassengers * pricePerSeat;
+        totalPriceSpan.textContent = totalPrice.toFixed(2);
+    }
+
+    // Update total price on page load (if there's a default value)
+    updateTotalPrice();
+
+    // Update total price whenever the number of passengers changes
+    numPassengersInput.addEventListener('input', updateTotalPrice);
+});
+</script>
+{% endblock %}

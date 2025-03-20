@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Complete Payment</h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Booking Summary</h5>
+                <p><strong>PNR Number:</strong> {{ booking.pnr_number }}</p>
+                <p><strong>Train:</strong> {{ booking.train.name }} ({{ booking.train.train_number }})</p>
+                <p><strong>From:</strong> {{ booking.train.source.name }} ({{ booking.train.source.code }})</p>
+                <p><strong>To:</strong> {{ booking.train.destination.name }} ({{ booking.train.destination.code }})</p>
+                <p><strong>Journey Date:</strong> {{ booking.journey_date }}</p>
+                <p><strong>Class:</strong> {{ booking.train_class.name }} ({{ booking.train_class.code }})</p>
+                <p><strong>Passengers:</strong> {{ booking.num_passengers }}</p>
+                <p><strong>Total Fare:</strong> ₹{{ booking.total_fare }}</p>
+            </div>
+            <div class="col-md-6">
+                <h5>Passenger Details</h5>
+                <ul class="list-group">
+                    {% for passenger in booking.passengers.all %}
+                    <li class="list-group-item">
+                        {{ passenger.name }} ({{ passenger.age }} years, {{ passenger.get_gender_display }})
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <h5>Payment Method</h5>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="payment_method" id="razorpay" value="razorpay" checked>
+                            <label class="form-check-label" for="razorpay">
+                                <img src="/static/img/razorpay.png" alt="Razorpay" height="30" class="me-2">
+                                Pay with Razorpay (Credit/Debit Card, UPI, Netbanking)
+                            </label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="stripe" value="stripe">
+                            <label class="form-check-label" for="stripe">
+                                <img src="/static/img/stripe.png" alt="Stripe" height="30" class="me-2">
+                                Pay with Stripe (International Cards)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button id="pay-button" class="btn btn-primary btn-lg">Pay ₹{{ booking.total_fare }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Razorpay Integration -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.getElementById('pay-button').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        if (paymentMethod === 'razorpay') {
+            // Make AJAX call to get order details
+            fetch('{% url "create_payment" booking.id %}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const options = {
+                            key: '{{ razorpay_key_id }}',
+                            amount: data.amount * 100,
+                            currency: data.currency,
+                            name: 'Railway Management System',
+                            description: 'Ticket Booking Payment',
+                            order_id: data.order_id,
+                            handler: function(response) {
+                                // Submit payment details to server
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = '{% url "verify_payment" booking.id %}';
+                                
+                                // Add CSRF token
+                                const csrfToken = document.createElement('input');
+                                csrfToken.type = 'hidden';
+                                csrfToken.name = 'csrfmiddlewaretoken';
+                                csrfToken.value = '{{ csrf_token }}';
+                                form.appendChild(csrfToken);
+                                
+                                // Add payment details
+                                const paymentId = document.createElement('input');
+                                paymentId.type = 'hidden';
+                                paymentId.name = 'razorpay_payment_id';
+                                paymentId.value = response.razorpay_payment_id;
+                                form.appendChild(paymentId);
+                                
+                                const orderId = document.createElement('input');
+                                orderId.type = 'hidden';
+                                orderId.name = 'razorpay_order_id';
+                                orderId.value = response.razorpay_order_id;
+                                form.appendChild(orderId);
+                                
+                                const signature = document.createElement('input');
+                                signature.type = 'hidden';
+                                signature.name = 'razorpay_signature';
+                                signature.value = response.razorpay_signature;
+                                form.appendChild(signature);
+                                
+                                document.body.appendChild(form);
+                                form.submit();
+                            },
+                            prefill: {
+                                name: '{{ user.get_full_name }}',
+                                email: '{{ user.email }}',
+                                contact: '{{ user.profile.phone_number }}'
+                            },
+                            theme: {
+                                color: '#0d6efd'
+                            }
+                        };
+                        
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } else {
+                        alert('Failed to create payment order. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+        } else if (paymentMethod === 'stripe') {
+            // Redirect to Stripe payment page
+            window.location.href = '{% url "stripe_payment" booking.id %}';
+        }
+    });
+</script>
+{% endblock %}
+

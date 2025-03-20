@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Booking Details - PNR: {{ booking.pnr_number }}</h4>
+        <div>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print E-Ticket
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Train Details</h5>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">{{ booking.train.train_number }} - {{ booking.train.name }}</h6>
+                            <span class="badge bg-info">{{ booking.train.get_train_type_display }}</span>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <p class="mb-0"><strong>From:</strong> {{ booking.train.source.name }} ({{ booking.train.source.code }})</p>
+                                <p class="mb-0 text-muted"><small>Departure: {{ booking.train.departure_time }}</small></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-0"><strong>To:</strong> {{ booking.train.destination.name }} ({{ booking.train.destination.code }})</p>
+                                <p class="mb-0 text-muted"><small>Arrival: {{ booking.train.arrival_time }}</small></p>
+                            </div>
+                        </div>
+                        <p><strong>Journey Date:</strong> {{ booking.journey_date }}</p>
+                        <p><strong>Class:</strong> {{ booking.train_class.name }} ({{ booking.train_class.code }})</p>
+                        <p><strong>Distance:</strong> {{ booking.train.distance }} km</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h5>Booking Information</h5>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p><strong>PNR Number:</strong> {{ booking.pnr_number }}</p>
+                        <p><strong>Booking Date:</strong> {{ booking.booking_date }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if booking.status == 'CONFIRMED' %}
+                                <span class="badge bg-success">{{ booking.status }}</span>
+                            {% elif booking.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">{{ booking.status }}</span>
+                            {% elif booking.status == 'WAITLISTED' %}
+                                <span class="badge bg-warning">{{ booking.status }}</span>
+                            {% elif booking.status == 'RAC' %}
+                                <span class="badge bg-info">{{ booking.status }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ booking.status }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Contact Email:</strong> {{ booking.contact_email|default:user.email }}</p>
+                        <p><strong>Contact Phone:</strong> {{ booking.contact_phone|default:user.profile.phone_number }}</p>
+                        
+                        {% if booking.payment %}
+                        <hr>
+                        <h6>Payment Information</h6>
+                        <p><strong>Payment Method:</strong> {{ booking.payment.get_payment_method_display }}</p>
+                        <p><strong>Payment Status:</strong> {{ booking.payment.get_status_display }}</p>
+                        <p><strong>Transaction ID:</strong> {{ booking.payment.transaction_id }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5>Passenger Details</h5>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Seat Number</th>
+                        <th>Berth Preference</th>
+                        <th>ID Proof</th>
+                        <th>Senior Citizen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for passenger in booking.passengers.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ passenger.name }}</td>
+                        <td>{{ passenger.age }}</td>
+                        <td>{{ passenger.get_gender_display }}</td>
+                        <td>{{ passenger.seat_number|default:"Not Assigned" }}</td>
+                        <td>{{ passenger.get_berth_preference_display }}</td>
+                        <td>{{ passenger.id_proof_number|default:"Not Provided" }}</td>
+                        <td>
+                            {% if passenger.is_senior_citizen %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h5 class="mt-4">Fare Details</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <td>Base Fare</td>
+                                <td class="text-end">₹{{ booking.base_fare }}</td>
+                            </tr>
+                            <tr>
+                                <td>Reservation Charges</td>
+                                <td class="text-end">₹{{ booking.reservation_charges }}</td>
+                            </tr>
+                            <tr>
+                                <td>GST (5%)</td>
+                                <td class="text-end">₹{{ booking.gst }}</td>
+                            </tr>
+                            <tr>
+                                <td>Convenience Fee</td>
+                                <td class="text-end">₹{{ booking.convenience_fee }}</td>
+                            </tr>
+                            <tr class="table-active fw-bold">
+                                <td>Total Amount</td>
+                                <td class="text-end">₹{{ booking.total_fare }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            {% if booking.status == 'CONFIRMED' and booking.journey_date > today %}
+            <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-danger">
+                <i class="bi bi-x-circle"></i> Cancel Booking
+            </a>
+            {% endif %}
+            <a href="{% url 'user_dashboard' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Important Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="bi bi-info-circle"></i> General Instructions</h6>
+                <ul>
+                    <li>Please carry a valid ID proof during the journey.</li>
+                    <li>Arrive at the station at least 30 minutes before departure.</li>
+                    <li>E-ticket is valid only with ID proof in original.</li>
+                    <li>Smoking and consumption of alcohol is prohibited.</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-exclamation-triangle"></i> Cancellation Policy</h6>
+                <ul>
+                    <li>If cancelled more than 48 hours before departure: 25% of fare</li>
+                    <li>If cancelled between 48 and 24 hours before departure: 50% of fare</li>
+                    <li>If cancelled between 24 and 12 hours before departure: 75% of fare</li>
+                    <li>If cancelled less than 12 hours before departure: No refund</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .card, .card * {
+            visibility: visible;
+        }
+        .card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .btn, .mt-4 {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+

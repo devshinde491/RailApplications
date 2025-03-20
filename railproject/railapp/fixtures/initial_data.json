@@ -1,0 +1,98 @@
+[
+    {
+        "model": "railapp.station",
+        "pk": 1,
+        "fields": {
+            "name": "CSMT (Mumbai)",
+            "code": "CSMT",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "address": "Mumbai",
+            "number_of_platforms": 18,
+            "zone": "CR",
+            "station_type": "TERMINAL",
+            "has_wifi": true,
+            "has_retiring_room": true,
+            "has_food_plaza": true
+        }
+    },
+    {
+        "model": "railapp.station",
+        "pk": 2,
+        "fields": {
+            "name": "Kolkata Railway Station (Kolkata)",
+            "code": "KOAA",
+            "city": "Kolkata",
+            "state": "West Bengal",
+            "address": "Kolkata",
+            "number_of_platforms": 5,
+            "zone": "ER",
+            "station_type": "TERMINAL",
+            "has_wifi": true,
+            "has_retiring_room": true,
+            "has_food_plaza": true
+        }
+    },
+    {
+        "model": "railapp.trainclass",
+        "pk": 1,
+        "fields": {
+            "name": "Sleeper",
+            "code": "SL",
+            "description": "Sleeper Class",
+            "is_ac": false,
+            "price": 500.00,
+            "fare_multiplier": 1.0
+        }
+    },
+    {
+        "model": "railapp.trainclass",
+        "pk": 2,
+        "fields": {
+            "name": "AC 3 Tier",
+            "code": "3A",
+            "description": "AC 3 Tier",
+            "is_ac": true,
+            "price": 1200.00,
+            "fare_multiplier": 2.0
+        }
+    },
+    {
+        "model": "railapp.train",
+        "pk": 1,
+        "fields": {
+            "train_number": "12050",
+            "name": "Shatabdi Express",
+            "train_type": "SHATABDI",
+            "source": 1,
+            "destination": 2,
+            "departure_time": "07:30:00",
+            "arrival_time": "15:00:00",
+            "runs_on": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+            "distance": 2000,
+            "fare_per_km": 0.5
+        }
+    },
+    {
+        "model": "railapp.trainclassavailability",
+        "pk": 1,
+        "fields": {
+            "train": 1,
+            "train_class": 1,
+            "date": "2025-03-20",
+            "available_seats": 10,
+            "total_seats": 50
+        }
+    },
+    {
+        "model": "railapp.trainclassavailability",
+        "pk": 2,
+        "fields": {
+            "train": 1,
+            "train_class": 2,
+            "date": "2025-03-20",
+            "available_seats": 5,
+            "total_seats": 20
+        }
+    }
+]

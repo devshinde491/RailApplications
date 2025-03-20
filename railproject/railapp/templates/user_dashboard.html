@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}My Dashboard - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Welcome, {{ user.get_full_name }}</h2>
+            <p class="text-muted">Manage your bookings and account information</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'search_trains' %}" class="btn btn-primary">Book New Ticket</a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming Journeys</h5>
+                    <p class="display-4">{{ upcoming_bookings.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Journeys</h5>
+                    <p class="display-4">{{ past_bookings.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Spent</h5>
+                    <p class="display-4">₹{{ total_spent|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Reward Points</h5>
+                    <p class="display-4">{{ reward_points|default:"0" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile and Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-circle me-3">
+                            {{ user.first_name|first }}{{ user.last_name|first }}
+                        </div>
+                        <div>
+                            <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                            <p class="text-muted mb-0">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Phone:</strong> {{ user.profile.phone_number }}</p>
+                    <p><strong>Address:</strong> {{ user.profile.address }}</p>
+                    <p><strong>Date of Birth:</strong> {{ user.profile.date_of_birth }}</p>
+                    <p><strong>ID Proof:</strong> {{ user.profile.get_id_proof_type_display }} ({{ user.profile.id_proof_number }})</p>
+                    <a href="#" class="btn btn-sm btn-outline-primary">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 action-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-search fs-1 mb-2"></i>
+                                    <h5>Search Trains</h5>
+                                    <p class="small">Find trains between stations</p>
+                                    <a href="{% url 'search_trains' %}" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 action-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-ticket-perforated fs-1 mb-2"></i>
+                                    <h5>Check PNR</h5>
+                                    <p class="small">Track your booking status</p>
+                                    <a href="{% url 'pnr_status' %}" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 action-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-check fs-1 mb-2"></i>
+                                    <h5>My Bookings</h5>
+                                    <p class="small">View all your bookings</p>
+                                    <a href="#upcoming-journeys" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 action-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-clock-history fs-1 mb-2"></i>
+                                    <h5>Train Schedule</h5>
+                                    <p class="small">Check train timings</p>
+                                    <a href="#" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 action-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-map fs-1 mb-2"></i>
+                                    <h5>Station Info</h5>
+                                    <p class="small">Find station details</p>
+                                    <a href="#" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 action-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-question-circle fs-1 mb-2"></i>
+                                    <h5>Help & Support</h5>
+                                    <p class="small">Get assistance</p>
+                                    <a href="#" class="stretched-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Journeys -->
+    <div id="upcoming-journeys" class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Upcoming Journeys</h5>
+            <a href="{% url 'search_trains' %}" class="btn btn-sm btn-primary">Book New Ticket</a>
+        </div>
+        <div class="card-body">
+            {% if upcoming_bookings %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>PNR</th>
+                                <th>Train</th>
+                                <th>From - To</th>
+                                <th>Date</th>
+                                <th>Class</th>
+                                <th>Passengers</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in upcoming_bookings %}
+                            <tr>
+                                <td>{{ booking.pnr_number }}</td>
+                                <td>{{ booking.train.name }} ({{ booking.train.train_number }})</td>
+                                <td>{{ booking.train.source.name }} - {{ booking.train.destination.name }}</td>
+                                <td>{{ booking.journey_date }}</td>
+                                <td>{{ booking.train_class.name }} ({{ booking.train_class.code }})</td>
+                                <td>{{ booking.num_passengers }}</td>
+                                <td><span class="badge bg-success">{{ booking.status }}</span></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'booking_detail' booking.pnr_number %}" class="btn btn-sm btn-info">View</a>
+                                        <a href="{% url 'cancel_booking' booking.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    You don't have any upcoming journeys.
+                    <a href="{% url 'search_trains' %}" class="alert-link">Book a ticket now</a>.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Past Journeys -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Past Journeys</h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#pastJourneysCollapse">
+                <i class="bi bi-chevron-down"></i> Toggle View
+            </button>
+        </div>
+        <div class="collapse" id="pastJourneysCollapse">
+            <div class="card-body">
+                {% if past_bookings %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>PNR</th>
+                                    <th>Train</th>
+                                    <th>From - To</th>
+                                    <th>Date</th>
+                                    <th>Class</th>
+                                    <th>Passengers</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in past_bookings %}
+                                <tr>
+                                    <td>{{ booking.pnr_number }}</td>
+                                    <td>{{ booking.train.name }} ({{ booking.train.train_number }})</td>
+                                    <td>{{ booking.train.source.name }} - {{ booking.train.destination.name }}</td>
+                                    <td>{{ booking.journey_date }}</td>
+                                    <td>{{ booking.train_class.name }} ({{ booking.train_class.code }})</td>
+                                    <td>{{ booking.num_passengers }}</td>
+                                    <td><span class="badge bg-secondary">{{ booking.status }}</span></td>
+                                    <td>
+                                        <a href="{% url 'booking_detail' booking.pnr_number %}" class="btn btn-sm btn-info">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        You don't have any past journeys.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .action-card {
+        transition: transform 0.3s;
+        position: relative;
+    }
+
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .action-card i {
+        color: #007bff;
+    }
+</style>
+{% endblock %}
+

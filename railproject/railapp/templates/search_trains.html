@@ -1,0 +1,129 @@
+<!-- templates/search_trains.html -->
+{% extends 'base.html' %}
+
+{% block title %}Search Trains - Railway Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-4 shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Search Trains</h4>
+        </div>
+        {% csrf_token %}
+        <div class="card-body">
+            <!-- Include jQuery and jQuery UI for autocomplete -->
+            <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+            <style>
+                .ui-autocomplete {
+                    max-height: 200px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    z-index: 1000; /* Ensure dropdown appears above other elements */
+                }
+                .train-result {
+                    margin-bottom: 20px;
+                }
+                .train-result ul {
+                    list-style-type: none;
+                    padding-left: 20px;
+                }
+                .train-result li {
+                    margin-bottom: 5px;
+                }
+                .btn-book {
+                    margin-left: 10px;
+                    padding: 5px 10px;
+                    font-size: 0.9em;
+                }
+            </style>
+            <form method="post" action="{% url 'search_trains' %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-3 mb-3 position-relative">
+                        <label for="id_source" class="form-label">From</label>
+                        <input type="text" name="source" id="id_source" class="form-control" placeholder="Enter Source" required>
+                    </div>
+                    <div class="col-md-3 mb-3 position-relative">
+                        <label for="id_destination" class="form-label">To</label>
+                        <input type="text" name="destination" id="id_destination" class="form-control" placeholder="Enter Destination" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="id_date" class="form-label">Date of Journey</label>
+                        <input type="date" name="date_of_journey" id="id_date" class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="id_train_type" class="form-label">Train Type</label>
+                        <select name="train_type" id="id_train_type" class="form-control">
+                            <option value="ALL">All Types</option>
+                            <option value="express">Express</option>
+                            <option value="local">Local</option>
+                            <option value="superfast">Superfast</option>
+                            <option value="shatabdi">Shatabdi</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Search Trains</button>
+            </form>
+        </div>
+    </div>
+
+    {% if trains %}
+        <h4>Available Trains</h4>
+        {% for train in trains %}
+            <div class="train-result">
+                <p>
+                    • <strong>{{ train.name }} ({{ train.train_number }})</strong><br>
+                    Departure: {{ train.departure_time|time:"h:i A" }} | Arrival: {{ train.arrival_time|time:"h:i A" }}
+                </p>
+                {% if train.availabilities %}
+                    <p><strong>Classes:</strong></p>
+                    <ul>
+                        {% for availability in train.availabilities %}
+                            {% if availability.available_seats > 0 %}
+                                <li>
+                                    {{ availability.train_class.name }} - ₹{{ availability.train_class.price }} ({{ availability.available_seats }} seats available)
+                                    <a href="{% url 'book_ticket' train.id availability.id %}" class="btn btn-primary btn-book">Book</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No classes available for this date.</p>
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="alert alert-info">No trains found for the selected route and date.</div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+$(document).ready(function() {
+    $("#id_source, #id_destination").autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: "{% url 'station_suggestions' %}",
+                dataType: "json",
+                data: {
+                    q: request.term  // Match the parameter expected by station_suggestions view
+                },
+                success: function(data) {
+                    response($.map(data.stations, function(item) {
+                        return {
+                            label: item.name,  // Display "CSMT (Mumbai)"
+                            value: item.name   // Set the input value to "CSMT (Mumbai)"
+                        };
+                    }));
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching station suggestions:", error);
+                }
+            });
+        },
+        minLength: 2
+    });
+});
+</script>
+{% endblock %}
